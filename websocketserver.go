@@ -21,8 +21,10 @@ var updrader = websocket.Upgrader{
 	},
 }
 
-var serverIp = flag.String("h", "192.168.1.247", "agentized service ip")
-var serverPort = flag.Int("p", 10554, "agentized service port")
+var (
+	configFilename = flag.String("file", "config.json", "config file name")
+	configFilepath = flag.String("path", ".", "config file path")
+)
 
 type ClientSession struct {
 	conn    *websocket.Conn
@@ -71,12 +73,13 @@ func (session *ClientSession) readTcpSocket() {
 }
 
 func websocketHandle(w http.ResponseWriter, r *http.Request) {
+
 	conn, updraderErr := updrader.Upgrade(w, r, nil)
 	if nil != updraderErr {
 		log.Print("upgrade:", updraderErr)
 		return
 	}
-	serverAddr := *serverIp + ":" + strconv.Itoa(*serverPort)
+	serverAddr := GetPorxyIP() + ":" + strconv.Itoa(GetPorxyPort())
 
 	tcpConn, err := net.DialTimeout("tcp", serverAddr, time.Duration(5)*time.Second)
 	if nil != err {
@@ -96,7 +99,11 @@ func websocketHandle(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
+	initConfig()
+	ReadConfig(*configFilepath, *configFilename)
 
 	http.HandleFunc("/websocket", websocketHandle)
-	log.Fatal(http.ListenAndServe("192.168.1.76:8080", nil))
+
+	listenAddr := GetListenIP() + ":" + strconv.Itoa(GetListenPort())
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }

@@ -1,0 +1,6 @@
+{
+  "listenip": "0.0.0.0",
+  "listenport": 8082,
+  "porxyip": "127.0.0.1",
+  "porxyport": 10554
+}
